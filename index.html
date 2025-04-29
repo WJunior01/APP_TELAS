@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Templates de Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.secondary {
+            background-color: #2196F3;
+        }
+        
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+        
+        button.warning {
+            background-color: #f44336;
+        }
+        
+        button.warning:hover {
+            background-color: #d32f2f;
+        }
+        
+        .layout-config {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="number"] {
+            padding: 8px;
+            width: 60px;
+        }
+        
+        .dashboard-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: grid;
+            gap: 20px;
+            min-height: 600px;
+        }
+        
+        .dashboard-panel {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            overflow: hidden;
+        }
+        
+        .dashboard-panel.empty {
+            background: #f1f1f1;
+            border: 2px dashed #ccc;
+        }
+        
+        .add-button {
+            background: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .panel-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 3;
+        }
+        
+        .panel-button {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .panel-button:hover {
+            background: white;
+        }
+        
+        .dashboard-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 60%;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        
+        .templates-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .template-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .template-preview {
+            height: 100px;
+            background: #f5f5f5;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: grid;
+        }
+        
+        .preview-cell {
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+        }
+        
+        .template-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .template-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        /* Estilos para fullscreen */
+        .fullscreen-modal {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .fullscreen-content {
+            width: 90%;
+            height: 90%;
+            margin: 2% auto;
+            max-width: none;
+        }
+        
+        .fullscreen-body {
+            height: calc(100% - 60px);
+            overflow: auto;
+        }
+        
+        #fullscreenContent {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .fullscreen-button {
+            background-color: #673AB7;
+        }
+        
+        .fullscreen-button:hover {
+            background-color: #5E35B1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gerenciador de Templates de Dashboard</h1>
+            <div>
+                <button id="saveTemplateBtn" class="secondary">Salvar Template</button>
+                <button id="loadTemplateBtn" class="secondary">Carregar Template</button>
+            </div>
+        </div>
+        
+        <div class="layout-config">
+            <h2>Configurar Layout</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label for="colCount">Colunas:</label>
+                    <input type="number" id="colCount" min="1" max="6" value="2">
+                </div>
+                <div class="form-group">
+                    <label for="rowCount">Linhas:</label>
+                    <input type="number" id="rowCount" min="1" max="6" value="2">
+                </div>
+                <button id="applyLayoutBtn">Aplicar Layout</button>
+                <button id="resetLayoutBtn" class="warning">Limpar Tudo</button>
+            </div>
+        </div>
+        
+        <div id="dashboardContainer" class="dashboard-container">
+            <!-- Os painéis serão adicionados dinamicamente aqui -->
+        </div>
+    </div>
+    
+    <!-- Modal para inserir código HTML -->
+    <div id="htmlModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Inserir Código HTML do Dashboard</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="htmlCode" placeholder="Cole o código HTML do dashboard aqui..."></textarea>
+            </div>
+            <button id="applyHtmlBtn">Aplicar</button>
+        </div>
+    </div>
+    
+    <!-- Modal para salvar template -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Salvar Template</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="templateName">Nome do Template:</label>
+                    <input type="text" id="templateName" style="width: 100%; padding: 8px;">
+                </div>
+            </div>
+            <button id="confirmSaveBtn">Salvar</button>
+        </div>
+    </div>
+    
+    <!-- Modal para carregar template -->
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Carregar Template</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="templatesList" class="templates-list">
+                    <!-- Templates serão listados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para tela cheia -->
+    <div id="fullscreenModal" class="modal fullscreen-modal">
+        <div class="modal-content fullscreen-content">
+            <div class="modal-header">
+                <h2>Dashboard em Tela Cheia</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body fullscreen-body">
+                <div id="fullscreenContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da interface
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            const colCountInput = document.getElementById('colCount');
+            const rowCountInput = document.getElementById('rowCount');
+            const applyLayoutBtn = document.getElementById('applyLayoutBtn');
+            const resetLayoutBtn = document.getElementById('resetLayoutBtn');
+            const htmlModal = document.getElementById('htmlModal');
+            const htmlCodeInput = document.getElementById('htmlCode');
+            const applyHtmlBtn = document.getElementById('applyHtmlBtn');
+            const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+            const loadTemplateBtn = document.getElementById('loadTemplateBtn');
+            const saveModal = document.getElementById('saveModal');
+            const loadModal = document.getElementById('loadModal');
+            const templateNameInput = document.getElementById('templateName');
+            const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+            const templatesList = document.getElementById('templatesList');
+            const fullscreenModal = document.getElementById('fullscreenModal');
+            const fullscreenContent = document.getElementById('fullscreenContent');
+            
+            // Fechar modais quando clicado no X
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    htmlModal.style.display = 'none';
+                    saveModal.style.display = 'none';
+                    loadModal.style.display = 'none';
+                    fullscreenModal.style.display = 'none';
+                });
+            });
+            
+            // Fechar modais quando clicado fora deles
+            window.addEventListener('click', function(event) {
+                if (event.target === htmlModal) {
+                    htmlModal.style.display = 'none';
+                }
+                if (event.target === saveModal) {
+                    saveModal.style.display = 'none';
+                }
+                if (event.target === loadModal) {
+                    loadModal.style.display = 'none';
+                }
+                if (event.target === fullscreenModal) {
+                    fullscreenModal.style.display = 'none';
+                }
+            });
+            
+            // Variável para armazenar o painel atual sendo editado
+            let currentPanel = null;
+            
+            // Aplicar o layout configurado
+            applyLayoutBtn.addEventListener('click', function() {
+                const cols = parseInt(colCountInput.value);
+                const rows = parseInt(rowCountInput.value);
+                
+                if (cols < 1 || cols > 6 || rows < 1 || rows > 6) {
+                    alert('O número de colunas e linhas deve estar entre 1 e 6');
+                    return;
+                }
+                
+                createLayout(cols, rows);
+            });
+            
+            // Limpar o layout
+            resetLayoutBtn.addEventListener('click', function() {
+                if (confirm('Tem certeza que deseja limpar todo o layout?')) {
+                    dashboardContainer.innerHTML = '';
+                }
+            });
+            
+            // Função para criar o layout
+            function createLayout(cols, rows) {
+                // Limpar o container existente
+                dashboardContainer.innerHTML = '';
+                
+                // Configurar o grid
+                dashboardContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                dashboardContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+                
+                // Criar os painéis
+                for (let i = 0; i < rows * cols; i++) {
+                    const panel = document.createElement('div');
+                    panel.className = 'dashboard-panel empty';
+                    panel.dataset.index = i;
+                    
+                    // Botão para adicionar conteúdo
+                    const addButton = document.createElement('div');
+                    addButton.className = 'add-button';
+                    addButton.innerHTML = '+';
+                    addButton.addEventListener('click', function() {
+                        currentPanel = panel;
+                        htmlModal.style.display = 'block';
+                        htmlCodeInput.value = panel.dataset.html || '';
+                    });
+                    
+                    panel.appendChild(addButton);
+                    dashboardContainer.appendChild(panel);
+                }
+            }
+            
+            // Aplicar o HTML ao painel selecionado
+            applyHtmlBtn.addEventListener('click', function() {
+                if (!currentPanel) return;
+                
+                const htmlCode = htmlCodeInput.value.trim();
+                
+                if (htmlCode) {
+                    // Remover a classe empty do painel
+                    currentPanel.classList.remove('empty');
+                    
+                    // Salvar o HTML como atributo de dados
+                    currentPanel.dataset.html = htmlCode;
+                    
+                    // Verificar se já existe controles do painel
+                    let panelControls = currentPanel.querySelector('.panel-controls');
+                    if (!panelControls) {
+                        panelControls = document.createElement('div');
+                        panelControls.className = 'panel-controls';
+                        
+                        // Botão de editar
+                        const editBtn = document.createElement('div');
+                        editBtn.className = 'panel-button';
+                        editBtn.innerHTML = '✏️';
+                        editBtn.title = 'Editar';
+                        editBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            currentPanel = panelControls.parentElement;
+                            htmlModal.style.display = 'block';
+                            htmlCodeInput.value = currentPanel.dataset.html || '';
+                        });
+                        
+                        // Botão de tela cheia
+                        const fullscreenBtn = document.createElement('div');
+                        fullscreenBtn.className = 'panel-button';
+                        fullscreenBtn.innerHTML = '🔍';
+                        fullscreenBtn.title = 'Tela Cheia';
+                        fullscreenBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const panel = panelControls.parentElement;
+                            openFullscreen(panel);
+                        });
+                        
+                        // Botão de remover
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'panel-button';
+                        removeBtn.innerHTML = '❌';
+                        removeBtn.title = 'Remover';
+                        removeBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const panel = panelControls.parentElement;
+                            
+                            // Remover o conteúdo HTML
+                            delete panel.dataset.html;
+                            
+                            // Remover o iframe
+                            const contentDiv = panel.querySelector('.dashboard-content');
+                            if (contentDiv) {
+                                panel.removeChild(contentDiv);
+                            }
+                            
+                            // Adicionar classe empty de volta
+                            panel.classList.add('empty');
+                            
+                            // Remover os controles do painel
+                            panel.removeChild(panelControls);
+                        });
+                        
+                        panelControls.appendChild(editBtn);
+                        panelControls.appendChild(fullscreenBtn);
+                        panelControls.appendChild(removeBtn);
+                        currentPanel.appendChild(panelControls);
+                    }
+                    
+                    // Remover qualquer conteúdo anterior
+                    const oldContent = currentPanel.querySelector('.dashboard-content');
+                    if (oldContent) {
+                        currentPanel.removeChild(oldContent);
+                    }
+                    
+                    // Criar o elemento para o conteúdo
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'dashboard-content';
+                    contentDiv.innerHTML = htmlCode;
+                    currentPanel.appendChild(contentDiv);
+                }
+                
+                // Fechar o modal
+                htmlModal.style.display = 'none';
+            });
+            
+            // Função para abrir em tela cheia
+            function openFullscreen(panel) {
+                if (!panel.dataset.html) return;
+                
+                fullscreenContent.innerHTML = panel.dataset.html;
+                fullscreenModal.style.display = 'block';
+                
+                // Suporte para API de tela cheia nativa (opcional)
+                if (fullscreenContent.requestFullscreen) {
+                    // Descomentar se quiser usar a API de tela cheia nativa
+                    // fullscreenContent.requestFullscreen();
+                }
+            }
+            
+            // Salvar template
+            saveTemplateBtn.addEventListener('click', function() {
+                saveModal.style.display = 'block';
+            });
+            
+            confirmSaveBtn.addEventListener('click', function() {
+                const name = templateNameInput.value.trim();
+                if (!name) {
+                    alert('Por favor, dê um nome ao seu template');
+                    return;
+                }
+                
+                // Coletar dados do layout
+                const layout = {
+                    name: name,
+                    date: new Date().toLocaleDateString(),
+                    cols: parseInt(colCountInput.value),
+                    rows: parseInt(rowCountInput.value),
+                    panels: []
+                };
+                
+                // Coletar dados de cada painel
+                const panels = dashboardContainer.querySelectorAll('.dashboard-panel');
+                panels.forEach(panel => {
+                    layout.panels.push({
+                        index: panel.dataset.index,
+                        html: panel.dataset.html || '',
+                        isEmpty: panel.classList.contains('empty')
+                    });
+                });
+                
+                // Salvar no localStorage
+                let templates = JSON.parse(localStorage.getItem('dashboardTemplates') || '[]');
+                templates.push(layout);
+                localStorage.setItem('dashboardTemplates', JSON.stringify(templates));
+                
+                // Fechar o modal
+                saveModal.style.display = 'none';
+                alert('Template salvo com sucesso!');
+            });
+            
+            // Carregar templates
+            loadTemplateBtn.addEventListener('click', function() {
+                // Carregar a lista de templates
+                const templates = JSON.parse(localStorage.getItem('dashboardTemplates') || '[]');
+                templatesList.innerHTML = '';
+                
+                if (templates.length === 0) {
+                    templatesList.innerHTML = '<p>Nenhum template encontrado.</p>';
+                } else {
+                    templates.forEach((template, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'template-card';
+                        card.dataset.index = index;
+                        
+                        // Criar uma prévia visual do grid
+                        const preview = document.createElement('div');
+                        preview.className = 'template-preview';
+                        preview.style.gridTemplateColumns = `repeat(${template.cols}, 1fr)`;
+                        preview.style.gridTemplateRows = `repeat(${template.rows}, 1fr)`;
+                        
+                        // Adicionar células à prévia
+                        for (let i = 0; i < template.rows * template.cols; i++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'preview-cell';
+                            preview.appendChild(cell);
+                        }
+                        
+                        const title = document.createElement('div');
+                        title.className = 'template-title';
+                        title.textContent = template.name;
+                        
+                        const info = document.createElement('div');
+                        info.className = 'template-info';
+                        info.textContent = `${template.cols}x${template.rows} • ${template.date}`;
+                        
+                        card.appendChild(preview);
+                        card.appendChild(title);
+                        card.appendChild(info);
+                        
+                        // Evento de clique para carregar o template
+                        card.addEventListener('click', function() {
+                            loadTemplate(templates[index]);
+                            loadModal.style.display = 'none';
+                        });
+                        
+                        templatesList.appendChild(card);
+                    });
+                }
+                
+                loadModal.style.display = 'block';
+            });
+            
+            // Função para carregar um template
+            function loadTemplate(template) {
+                // Atualizar os valores dos inputs
+                colCountInput.value = template.cols;
+                rowCountInput.value = template.rows;
+                
+                // Criar o layout base
+                createLayout(template.cols, template.rows);
+                
+                // Preencher os painéis com os conteúdos salvos
+                template.panels.forEach(panelData => {
+                    const panel = dashboardContainer.querySelector(`.dashboard-panel[data-index="${panelData.index}"]`);
+                    if (panel && panelData.html) {
+                        // Definir o HTML como atributo de dados
+                        panel.dataset.html = panelData.html;
+                        
+                        // Remover a classe empty
+                        panel.classList.remove('empty');
+                        
+                        // Adicionar os controles do painel
+                        const panelControls = document.createElement('div');
+                        panelControls.className = 'panel-controls';
+                        
+                        // Botão de editar
+                        const editBtn = document.createElement('div');
+                        editBtn.className = 'panel-button';
+                        editBtn.innerHTML = '✏️';
+                        editBtn.title = 'Editar';
+                        editBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            currentPanel = panel;
+                            htmlModal.style.display = 'block';
+                            htmlCodeInput.value = panel.dataset.html || '';
+                        });
+                        
+                        // Botão de tela cheia
+                        const fullscreenBtn = document.createElement('div');
+                        fullscreenBtn.className = 'panel-button';
+                        fullscreenBtn.innerHTML = '🔍';
+                        fullscreenBtn.title = 'Tela Cheia';
+                        fullscreenBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            openFullscreen(panel);
+                        });
+                        
+                        // Botão de remover
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'panel-button';
+                        removeBtn.innerHTML = '❌';
+                        removeBtn.title = 'Remover';
+                        removeBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            
+                            // Remover o conteúdo HTML
+                            delete panel.dataset.html;
+                            
+                            // Remover o iframe
+                            const contentDiv = panel.querySelector('.dashboard-content');
+                            if (contentDiv) {
+                                panel.removeChild(contentDiv);
+                            }
+                            
+                            // Adicionar classe empty de volta
+                            panel.classList.add('empty');
+                            
+                            // Remover os controles do painel
+                            panel.removeChild(panelControls);
+                        });
+                        
+                        panelControls.appendChild(editBtn);
+                        panelControls.appendChild(fullscreenBtn);
+                        panelControls.appendChild(removeBtn);
+                        panel.appendChild(panelControls);
+                        
+                        // Criar o elemento para o conteúdo
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'dashboard-content';
+                        contentDiv.innerHTML = panelData.html;
+                        panel.appendChild(contentDiv);
+                    }
+                });
+            }
+            
+            // Iniciar com um layout 2x2 padrão
+            createLayout(2, 2);
+        });
+    </script>
+</body>
+</html>
